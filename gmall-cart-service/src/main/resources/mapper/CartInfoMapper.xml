@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="online.superh.gmall.cart.mapper.CartInfoMapper">
+    <resultMap id="CartListMap" type="online.superh.gmall.bean.CartInfo" autoMapping="true">
+        <id property="id" column="id"></id>
+        <result property="skuPrice" column="price"></result>
+    </resultMap>
+    <select id="selectCartListWithCurPrice" resultMap="CartListMap">
+        SELECT ci.*,si.price
+        FROM cart_info ci
+                 INNER JOIN sku_info si
+                            ON ci.sku_id = si.id
+        WHERE ci.user_id = #{userId}
+        ORDER BY cart_price DESC;
+    </select>
+</mapper>

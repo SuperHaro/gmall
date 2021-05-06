@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--namespace:非标要属性，接口的全路径-->
+<mapper namespace="online.superh.gmall.manage.mapper.SpuSaleAttrMapper">
+    <!--resultMap:返回的结果集
+     id:唯一标识
+     type:返回的结果集的数据类型
+     autoMapping:自动映射
+     -->
+    <resultMap id="spuSaleAttrMap" type="online.superh.gmall.bean.SpuSaleAttr" autoMapping="true">
+    <!--id:主键
+        property:实体类的属性名
+        column:表中的字段
+        -->
+        <id property="id" column="id"></id>
+    <!--普通字段加上autoMapping="true"不写-->
+    <!--<result></result>-->
+    <!--配置一对多
+        ofType=返回集合的属性对象
+        -->
+        <collection property="spuSaleAttrValueList" ofType="online.superh.gmall.bean.SpuSaleAttrValue" autoMapping="true">
+            <id property="id" column="sale_attr_value_id"></id>
+        </collection>
+    <!--配置多对一-->
+<!--    <association property="属性名" javaType="属性名代表的实体类" autoMapping="true">-->
+<!--        <id property="实体类属性名" column="表明"></id>-->
+<!--    </association>-->
+    </resultMap>
+    <!--id:方法名称    -->
+    <!--#，$-->
+    <!--如果一个参数可以:
+        单纯用mybatis,可以0,1,2,3代表多个参数的顺序！
+        通用mapper多个参数不可以用0,1,2,3!
+        -->
+    <!-- List<SpuSaleAttr> selectSpuSaleAttrList(String spuId);-->
+    <select id="selectSpuSaleAttrList" resultMap="spuSaleAttrMap" >
+        SELECT ssa.id,ssa.spu_id,ssa.sale_attr_name,ssa.sale_attr_id,ssav.sale_attr_value_name,ssav.id sale_attr_value_id
+        from spu_sale_attr ssa
+                 INNER JOIN spu_sale_attr_value ssav
+                            on ssa.sale_attr_id = ssav.sale_attr_id
+                                AND ssa.spu_id =ssav.spu_id
+        WHERE ssa.spu_id = #{id}
+    </select>
+<!--    getSpuSaleAttrlistChecked-->
+<!--    通用mapper中多个参数用arg0,arg1-->
+    <select id="getSpuSaleAttrlistChecked" resultMap="spuSaleAttrMap">
+        SELECT sa.id ,sa.spu_id, sa.sale_attr_name,sa.sale_attr_id,
+               sv.id sale_attr_value_id,
+               sv.sale_attr_value_name,
+               skv.sku_id,
+               IF(skv.sku_id IS NULL,0,1)  is_checked
+        FROM spu_sale_attr sa
+                 INNER JOIN spu_sale_attr_value  sv ON  sa.spu_id=sv.spu_id AND sa.sale_attr_id=sv.sale_attr_id
+                 LEFT JOIN sku_sale_attr_value skv ON skv.sale_attr_id= sa.sale_attr_id AND skv.sale_attr_value_id=sv.id AND skv.sku_id=#{arg0}
+        WHERE  sa.spu_id=#{arg1}
+        ORDER BY sv.sale_attr_id,sv.id
+    </select>
+</mapper>
