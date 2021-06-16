@@ -125,7 +125,54 @@ public class CartServiceImpl implements CartService {
                cartInfoMapper.insertSelective(cartInfock);
             }
         }
-        return loadCartCache(userId);
+        // 从新在数据库中查询并返回数据
+        List<CartInfo> cartInfoList1 = loadCartCache(userId);
+
+        for (CartInfo cartInfo : cartInfoList1) {
+            for (CartInfo info : cartInfosck) {
+                if (cartInfo.getSkuId().equals(info.getSkuId())){
+                    // 只有被勾选的才会进行更改
+                    if (info.getIsChecked().equals("1")){
+                        cartInfo.setIsChecked(info.getIsChecked());
+                        // 更新redis中的isChecked
+                        checkCart(cartInfo.getSkuId(),info.getIsChecked(),userId);
+                    }
+                }
+            }
+        }
+        return cartInfoList1;
+    }
+
+    @Override
+    public void checkCart(String skuId, String isChecked, String userId) {
+        Jedis jedis = redisUtil.getJedis();
+        String cartkey = CartConst.USER_KEY_PREFIX+userId+CartConst.USER_CART_KEY_SUFFIX;
+        String cartInfoJson = jedis.hget(cartkey, skuId);
+        CartInfo cartInfo = JSON.parseObject(cartInfoJson, CartInfo.class);
+        cartInfo.setIsChecked(isChecked);
+        jedis.hset(cartkey,skuId,JSON.toJSONString(cartInfo));
+        String userCheckedKey = CartConst.USER_KEY_PREFIX + userId + CartConst.USER_CHECKED_KEY_SUFFIX;
+        if (isChecked.equals("1")){
+            jedis.hset(userCheckedKey,skuId,JSON.toJSONString(cartInfo));
+        }else{
+            jedis.hdel(userCheckedKey,skuId);
+        }
+        jedis.close();
+    }
+
+    @Override
+    public List<CartInfo> getCartListCk(String userId) {
+        ArrayList<CartInfo> cartInfos = new ArrayList<>();
+        Jedis jedis = redisUtil.getJedis();
+        String userCheckedKey = CartConst.USER_KEY_PREFIX + userId + CartConst.USER_CHECKED_KEY_SUFFIX;
+        List<String> hvals = jedis.hvals(userCheckedKey);
+        if(hvals!=null&&hvals.size()>0){
+            for (String hval : hvals) {
+                cartInfos.add(JSON.parseObject(hval,CartInfo.class));
+            }
+        }
+        jedis.close();
+        return cartInfos;
     }
 
     private List<CartInfo> loadCartCache(String userId) {

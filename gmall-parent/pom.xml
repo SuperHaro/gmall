@@ -41,6 +41,7 @@
         <jest.version>5.3.3</jest.version>
         <jna.version>4.5.1</jna.version>
         <beanUtils.version>1.9.3</beanUtils.version>
+        <netty_version>3.2.5.Final</netty_version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -144,6 +145,11 @@
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
                 <version>${beanUtils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.netty</groupId>
+                <artifactId>netty</artifactId>
+                <version>${netty_version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
